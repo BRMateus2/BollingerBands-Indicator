@@ -5,7 +5,7 @@
 //|                                              http://www.mql5.com |
 //+------------------------------------------------------------------+
 #property copyright   "2009-2020, MetaQuotes Software Corp."
-#property link        "http://www.mql5.com"
+#property link        "https://www.mql5.com/"
 #property description "Bollinger Bands.\n"
 #property description "NOT ORIGINAL SOURCE, MODIFIED BY COMMUNITY USER"
 #property version "1.00"
@@ -24,6 +24,9 @@
 #property indicator_label3  "Bands lower"
 // Metatrader 5 has a limitation of 64 User Input Variable description, for reference this has 64 traces ----------------------------------------------------------------
 //---- Definitions
+#ifndef ErrorPrint
+#define ErrorPrint(Dp_error) Print("ERROR: " + Dp_error + " at \"" + __FUNCTION__ + ":" + IntegerToString(__LINE__) + "\", last internal error: " + IntegerToString(GetLastError()) + " (" + __FILE__ + ")"); ResetLastError(); DebugBreak(); // It should be noted that the GetLastError() function doesn't zero the _LastError variable. Usually the ResetLastError() function is called before calling a function, after which an error appearance is checked.
+#endif
 //#define INPUT const
 #ifndef INPUT
 #define INPUT input
@@ -67,53 +70,53 @@ int OnInit()
                 if(ExtBandsPeriod == 0) {
                     ExtBandsPeriod = ExtBandsPeriod + 1;
                 } else if(ExtBandsPeriod < 0) {
-                    Print("calculation error with \"ExtBandsPeriod = ((InpPeriodAdMinutes * 60) / PeriodSeconds(PERIOD_CURRENT))\"");
+                    ErrorPrint("calculation error with \"ExtBandsPeriod = ((InpPeriodAdMinutes * 60) / PeriodSeconds(PERIOD_CURRENT))\"");
                 }
             } else {
-                Print("wrong value for \"InpPeriodAdMinutes\" = \"" + IntegerToString(InpPeriodAdMinutes) + "\". Indicator will use value \"" + IntegerToString(InpBandsPeriod) + "\" for calculations.");
+                ErrorPrint("wrong value for \"InpPeriodAdMinutes\" = \"" + IntegerToString(InpPeriodAdMinutes) + "\". Indicator will use value \"" + IntegerToString(InpBandsPeriod) + "\" for calculations.");
             }
         } else if(PeriodSeconds(PERIOD_CURRENT) == PeriodSeconds(PERIOD_D1)) {
             if(InpPeriodAdD1 > 0) {
                 ExtBandsPeriod = InpPeriodAdD1;
             } else {
-                Print("wrong value for \"InpPeriodAdD1\" = \"" + IntegerToString(InpPeriodAdD1) + "\". Indicator will use value \"" + IntegerToString(InpBandsPeriod) + "\" for calculations.");
+                ErrorPrint("wrong value for \"InpPeriodAdD1\" = \"" + IntegerToString(InpPeriodAdD1) + "\". Indicator will use value \"" + IntegerToString(InpBandsPeriod) + "\" for calculations.");
             }
         } else if(PeriodSeconds(PERIOD_CURRENT) == PeriodSeconds(PERIOD_W1)) {
             if(InpPeriodAdW1 > 0) {
                 ExtBandsPeriod = InpPeriodAdW1;
             } else {
-                Print("wrong value for \"InpPeriodAdW1\" = \"" + IntegerToString(InpPeriodAdW1) + "\". Indicator will use value \"" + IntegerToString(InpBandsPeriod) + "\" for calculations.");
+                ErrorPrint("wrong value for \"InpPeriodAdW1\" = \"" + IntegerToString(InpPeriodAdW1) + "\". Indicator will use value \"" + IntegerToString(InpBandsPeriod) + "\" for calculations.");
             }
         } else if(PeriodSeconds(PERIOD_CURRENT) == PeriodSeconds(PERIOD_MN1)) {
             if(InpPeriodAdMN1 > 0) {
                 ExtBandsPeriod = InpPeriodAdMN1;
             } else {
-                Print("wrong value for \"InpPeriodAdMN1\" = \"" + IntegerToString(InpPeriodAdMN1) + "\". Indicator will use value \"" + IntegerToString(InpBandsPeriod) + "\" for calculations.");
+                ErrorPrint("wrong value for \"InpPeriodAdMN1\" = \"" + IntegerToString(InpPeriodAdMN1) + "\". Indicator will use value \"" + IntegerToString(InpBandsPeriod) + "\" for calculations.");
             }
         } else {
-            Print("untreated condition");
+            ErrorPrint("untreated condition");
         }
     }
     if(InpBandsPeriod < 2 && InpPeriodAd == false) {
         ExtBandsPeriod = 20;
-        PrintFormat("Incorrect value for input variable InpBandsPeriod=%d. Indicator will use value=%d for calculations.", InpBandsPeriod, ExtBandsPeriod);
+        ErrorPrint("Incorrect value for input variable InpBandsPeriod=" + IntegerToString(InpBandsPeriod) + ". Indicator will use value=" + IntegerToString(ExtBandsPeriod) + " for calculations.");
     } else if(InpPeriodAd == false) {
         ExtBandsPeriod = InpBandsPeriod;
     }
     if(InpBandsShift < 0) {
         ExtBandsShift = 0;
-        PrintFormat("Incorrect value for input variable InpBandsShift=%d. Indicator will use value=%d for calculations.", InpBandsShift, ExtBandsShift);
+        ErrorPrint("Incorrect value for input variable InpBandsShift=" + IntegerToString(InpBandsShift) + ". Indicator will use value=" + IntegerToString(ExtBandsShift) + " for calculations.");
     } else
         ExtBandsShift = InpBandsShift;
     if(InpBandsDeviations == 0.0) {
         ExtBandsDeviations = 2.0;
-        PrintFormat("Incorrect value for input variable InpBandsDeviations=%f. Indicator will use value=%f for calculations.", InpBandsDeviations, ExtBandsDeviations);
+        ErrorPrint("Incorrect value for input variable InpBandsDeviations=" + DoubleToString(InpBandsDeviations) + ". Indicator will use value=" + DoubleToString(ExtBandsDeviations) + " for calculations.");
     } else
         ExtBandsDeviations = InpBandsDeviations;
 // Treat maHandle
     maHandle = iMA(Symbol(), Period(), ExtBandsPeriod, 0, ENUM_MA_METHODInp, ENUM_APPLIED_PRICEInp);
     if(maHandle == INVALID_HANDLE || maHandle < 0) {
-        Print("ERROR: maHandle == INVALID_HANDLE || maHandle < 0");
+        ErrorPrint("ERROR: maHandle == INVALID_HANDLE || maHandle < 0");
         return INIT_FAILED;
     }
 //--- define buffers
@@ -163,7 +166,7 @@ int OnCalculate(const int rates_total,
     int i = pos;
     //--- middle line
     if(CopyBuffer(maHandle, 0, 0, (rates_total - prev_calculated + 1), ExtMLBuffer) <= 0) { // Try to copy, if there is no data copied for some reason, then we don't need to calculate - also, we don't need to copy rates before prev_calculated as they have the same result
-        Print("ERROR: maHandle, 0, 0, (rates_total - prev_calculated + 1), ExtMLBuffer) <= 0");
+        ErrorPrint("ERROR: maHandle, 0, 0, (rates_total - prev_calculated + 1), ExtMLBuffer) <= 0");
         return 0;
     }
     for(; i < rates_total && !IsStopped(); i++) {
